@@ -1,4 +1,4 @@
-/* Sprint11_ver1.1 --- after review 1 --- Bubnov Andrew - 23.10.2019 --- Have a nice day! :) */
+/* Sprint11_ver1.1 --- Bubnov Andrew - 16.11.2019 --- Have a nice day! */
 
 /**
  * Токен: 01ae8842-bd3d-421f-aca3-5f8ed5caf81a
@@ -9,13 +9,13 @@
 
 // апи - делает магию
 class Api {
-  constructor (options) {
+  constructor(options) {
     this.url = options.url;
     this.token = options.token;
     this.userId = '';
   }
   // получить профиль
-  getUserData () {
+  getUserData() {
     return fetch(`${this.url}/users/me`, {
       headers: {
         // authorization: '01ae8842-bd3d-421f-aca3-5f8ed5caf81b', // - error test
@@ -129,9 +129,51 @@ class Api {
         console.log(err);
       });
   }
-  putLike(cardId) {
+
+
+  // пробую избежать повторения кода >>>>
+
+  /* putLike(cardId) {
     return fetch(`${this.url}/cards/like/${cardId}`, {
       method: 'PUT',
+      headers: {
+        authorization: this.token,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(cardData => {
+        if (cardData.ok) {
+          return cardData.json();
+        }
+        return Promise.reject(`Ошибка: ${cardData.status}`)
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+  delLike(cardId) {
+    return fetch(`${this.url}/cards/like/${cardId}`, {
+      method: 'DELETE',
+      headers: {
+        authorization: this.token,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(cardData => {
+        if (cardData.ok) {
+          return cardData.json();
+        }
+        return Promise.reject(`Ошибка: ${cardData.status}`)
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  } */
+
+  fetchLike(cardId, method) {
+    return fetch(`${this.url}/cards/like/${cardId}`, {
+      method: method,
       headers: {
         authorization: this.token,
         'Content-Type': 'application/json'
@@ -151,8 +193,8 @@ class Api {
 
 // сущность, которая творит всякое с датой профиля
 class UserInfo {
-	constructor (api) {
-    this.api = api;    	
+  constructor(api) {
+    this.api = api;
   }
   // запрашивает данные юзера
   load() {
@@ -172,7 +214,7 @@ class UserInfo {
   render(userData) {
     document.querySelector('.user-info__name').textContent = userData.name;
     document.querySelector('.user-info__job').textContent = userData.about;
-    document.querySelector('.user-info__photo').style.backgroundImage =  `url(${userData.avatar})`;
+    document.querySelector('.user-info__photo').style.backgroundImage = `url(${userData.avatar})`;
   }
   // меняю юзер-пик
   changeUserPic(data) {
@@ -189,160 +231,177 @@ class CardList {
     this.api = api;
     this.container = container;
     this.cardsData = [];
-  }  
+  }
   // прошу карточки, читаю, рисую
-  render () {
+  render() {
     this.api.getCardList().then((cardsList) => {
       // this.cardsData = cardsList; ----------------- тестово отключено
+      // debugger;
       for (let i = (cardsList.length - 1); 0 <= i; i--) {
         this.cardsData.unshift(cardsList[i]);
-        const {cardElement} = new Card(cardsList[i], this.api);
+        let n = (cardsList.length - 1) - i;
+        this.cardsData[n].userLiked = this.isLiked(cardsList[i]._id);
+        const { cardElement } = new Card(this.cardsData[n], this.api);
         this.container.appendChild(cardElement);
       }
     });
   }
   // создаю карточку, рисую от новых к старым
-  addCard (data) {
+  addCard(data) {
     const cardData = {
       name: data.name,
       link: data.link
     };
     this.api.postNewCard(cardData).then((cardData) => {
-      const {cardElement} = new Card(cardData, this.api);
+      const { cardElement } = new Card(cardData, this.api);
       this.container.insertBefore(cardElement, this.container.firstChild);
       this.cardsData.unshift(cardData);
     })
   }
+  
   // дезинтегратор карточек
-  removeCard (event) {
+  removeCard(event) {
     event.stopPropagation();
-    const cardId = event.target.closest('.place-card').dataset.cardid;
+    const cardId = event.target.closest('.place-card').dataset.cardId;
     console.log(cardId);
     this.api.deleteCard(cardId).then((cardsList) => {
       if (cardsList.message === 'Пост удалён') {
         //  this.render() --- эта штука не заработала, хотел забирать новый список с серва
         event.target.closest('.place-card').remove(); // удаляю из дома сам
-      };      
+      };
     });
   }
-  // 
-  postLike (event) {
-    event.stopPropagation();
-    const cardId = event.target.closest('.place-card').dataset.cardid;
-    this.api.putLike(cardId).then((resCardData) => { // здесь я хотел 
-      const likeCount = event.target.closest('.place-card__like-container').querySelector('.place-card__like-count');
-      console.log(resCardData);
-      const resMeta = this.isLiked(resCardData);
-      if (resMeta.stat) {
-        this.cardsData[resMeta.iter] = resCardData;        
-        if (resCardData.likes.length > 99) {
-          likeCount.textContent = '99+' ;
-        } else {
-          likeCount.textContent = resCardData.likes.length;
-        }
-      } else {
-
-      }
-
-      
-
-      
-      
-    });
-  }
+  
   // штука проверяющая полайкана ли карточка
-  isLiked(resCardData) {
-    let count = 0;
+  isLiked(cardId) {
+    
     for (let i = 0; i <= (this.cardsData.length - 1); i++) {
-      if (this.cardsData[i]._id === resCardData._id) {
-        for (let j = 0; j <= (resCardData.likes.length - 1); j++) {
-          count = i;
-          if (resCardData.likes[j]._id === this.api.userId) {            
-            return {stat: true, iter: count}
+      if (this.cardsData[i]._id === cardId) {
+        for (let j = 0; j <= (this.cardsData[i].likes.length - 1); j++) {
+          
+          if (this.cardsData[i].likes[j]._id === this.api.userId) {
+
+            // в iter пишу номер найденой карточки 
+            return { stat: true, oreder: i, likes: this.cardsData[i].likes.length }
           }
         }
       }
+      return { stat: false, oreder: i, likes: this.cardsData[i].likes.length }
     }
-    return {stat: false, iter: count}
+    console.log('Ошибка, такого cardId не существует!')
   }
-  getCardFromCardList (cardId) {}
+
+  toggleLike(event) {
+    event.stopPropagation();
+    let method = 'PUT';
+    let cardElement = event.target.closest('.place-card');
+    const cardId = cardElement.dataset.cardId;    
+    if (this.cardData[''].stat) {
+      method = 'DELETE'
+    };
+    this.api.fetchLike(cardId, method).then((resCardData) => {
+      console.log(resCardData);
+      this.cardsData[''] = resCardData;
+      cardElement = this.renderLike(cardElement);
+    })
+  }
+
+  renderLike(cardElement) {
+    debugger;
+    if (this.cardData[''].stat) {
+      cardElement.querySelector('.place-card__like-icon').classList.add('place-card__like-icon_liked')
+    } else {
+      cardElement.querySelector('.place-card__like-icon').classList.remove('place-card__like-icon_liked')
+    }
+    if (cardInfo.likes > 99) {
+      cardElement.querySelector('.place-card__like-count').textContent = '99+'
+    } else {
+      cardElement.querySelector('.place-card__like-count').textContent = cardInfo.likes
+    }
+    return cardElement
+  }
+
+  serchCardById(cardId) {
+    for (let i = 0; i <= (this.cardsData.length - 1); i++) {
+      if (this.cardsData[i]._id === cardId) {
+        return { data: this.cardsData[i], oder: i }
+      } else { 
+        console.log('Ошибка, такого cardId не существует!')
+      }
+    }
+  }
 }
 
 // создавальщик карточек
 class Card {
-  constructor (data, api) {
+  constructor(data, api) {
     this.api = api;
     this.data = data;
-    this.cardElement = this.create(this.data);    
-    this.liked = false;
+    this.cardElement = this.create(this.data);
   }
 
-  create (data) {
-    
+  create(data) {
+
     const cardTemplate = `
-      <div class="place-card__image" style="background-image: url(&quot;${data.link}&quot;);">
+      <div class="place-card__image" style="background-image: url('${data.link}');">
         <button class="place-card__delete-icon"></button>
         </div><div class="place-card__description">
         <h3 class="place-card__name">${data.name}</h3>
         <div class="place-card__like-container">
           <button class="place-card__like-icon"></button>
-          <p class="place-card__like-count">${data.likes.length}</p>
+          <p class="place-card__like-count"></p>
         </div>
       </div>`;
-    const cardContainer = document.createElement('div');    
+    let cardContainer = document.createElement('div');
     cardContainer.classList.add('place-card');
-    cardContainer.setAttribute('data-cardId', `${data._id}`);
+    cardContainer.setAttribute('data-card-id', `${data._id}`);
+    cardContainer.setAttribute('data-card-order', `${data._id}`);
     cardContainer.innerHTML = cardTemplate;
-    const likeCount = cardContainer.querySelector('.place-card__like-count');
-    cardContainer.querySelector('.place-card__like-icon').addEventListener('click', (event => placesList.postLike(event)));
+
     cardContainer.querySelector('.place-card__delete-icon').addEventListener('click', (event => placesList.removeCard(event)));
     cardContainer.querySelector('.place-card__image').addEventListener('click', (event => popupper.open(event)));
+    cardContainer.querySelector('.place-card__like-icon').addEventListener('click', (event => placesList.toggleLike(event)));
 
-    // рисую лайк, если каунт больше полкано этим юзером
-    if (placesList.isLiked(data).stat) {
-      cardContainer.querySelector('.place-card__like-icon').classList.add('place-card__like-icon_liked')
-    }
-    // меняю большие цифры на красивые
-    if (data.likes.length > 99) {
-      likeCount.textContent = '99+' ;
-    }
     // удаляю delete button всех карточек с чужими ownerId
-    if (data.owner._id !== 'fa549859955ed7d773a18e6d') { 
-      cardContainer.querySelector('.place-card__image').removeChild(cardContainer.querySelector('.place-card__delete-icon'))        
+    if (data.owner._id !== this.api.userId) {
+      cardContainer.querySelector('.place-card__image').removeChild(cardContainer.querySelector('.place-card__delete-icon'))
     }
-    
+
+    // рисую лайк
+    cardContainer = placesList.renderLike(cardContainer);
+
     return cardContainer;
   }
 
-  like (event) { // не используется, кажется, может пригодиться
+  /* like(event) { // не используется, кажется, может пригодиться
     this.liked = !this.liked;
-    event.stopPropagation();    
+    event.stopPropagation();
     if (this.liked) {
       event.target.classList.add('place-card__like-icon_liked');
     }
     else {
       event.target.classList.remove('place-card__like-icon_liked')
     }
-  }
+  } */
 
-  remove (event) {
+  /* remove(event) {
     event.stopPropagation();
     event.target.closest('.place-card').remove();
-  }
+  } */
 }
 
 // генератор попапов
 class Popup {
-  constructor (popupContainer, api) {
+  constructor(popupContainer, api) {
     this.api = api;
-    this.popupContainer = popupContainer;    
+    this.popupContainer = popupContainer;
   }
   // меняю структуру попапа от event.target, 
   create(event) {
-    const popupContent = document.createElement('div');    
+    const popupContent = document.createElement('div');
     // попап фото
     if (event.target.classList.contains('place-card__image')) {
-      
+
       const popupMarkup = `
         <img class="popup__pic" src="${event.target.style.backgroundImage.slice(5, -2)}">
         <img class="popup__close" src="./images/close.svg">`;
@@ -355,7 +414,7 @@ class Popup {
     }
     // попап добавления карточки
     else if (event.target.classList.contains('user-info__add-button')) {
-      
+
       const popupMarkup = `
         <img class="popup__close" src="./images/close.svg">
         <h3 class="popup__title">Новое место</h3>
@@ -366,7 +425,7 @@ class Popup {
           <span class="error error_hidden error__additional">its no errors</span>
           <button class="button popup__button" disabled="yes" name="button" style="cursor: default;">+</button>
         </form>`;
-        
+
       popupContent.classList.add('popup__content');
       popupContent.innerHTML = popupMarkup;
 
@@ -386,7 +445,7 @@ class Popup {
           name: popupContent.querySelector('.popup__input_type-name').value,
           link: popupContent.querySelector('.popup__input_type-additional').value,
           count: 0
-        }        
+        }
         placesList.addCard(nawCardData);
         this.close();
       });
@@ -394,8 +453,8 @@ class Popup {
       return popupContent;
     }
     // попап редактирования name about
-    else if (event.target.classList.contains('user-info__edit-button')) {     
-      
+    else if (event.target.classList.contains('user-info__edit-button')) {
+
       const popupMarkup = `
         <img class="popup__close" src="./images/close.svg">
         <h3 class="popup__title">Редактировать профиль</h3>
@@ -423,13 +482,13 @@ class Popup {
       popupContent.querySelector('.popup__button').addEventListener('click', (event) => {
         event.preventDefault();
         this.close();
-        userInfo.changeNameAbout({name: popupContent.querySelector('.popup__input_type-name').value, about: popupContent.querySelector('.popup__input_type-additional').value});          
+        userInfo.changeNameAbout({ name: popupContent.querySelector('.popup__input_type-name').value, about: popupContent.querySelector('.popup__input_type-additional').value });
       });
       return popupContent;
     }
     // попап редактирования юзер-пика
     else if (event.target.classList.contains('user-info__photo')) {
-      
+
       const popupMarkup = `
         <img class="popup__close" src="./images/close.svg">
         <h3 class="popup__title">Обновить фотографию</h3>
@@ -438,22 +497,22 @@ class Popup {
           <span class="error error_hidden error__additional">its no errors</span>
           <button class="button popup__button" disabled="yes" name="button" style="cursor: default; font-size: 18px; font-weight: bold;">Сохранить</button>
         </form>`;
-        
+
       popupContent.classList.add('popup__content');
       popupContent.innerHTML = popupMarkup;
 
       popupContent.querySelector('.popup__close').addEventListener('click', () => {
         this.close();
       });
-      
+
       popupContent.querySelector('.popup__input_type-additional').addEventListener('input', (event) => {
         this.validateInput(event);
       });
 
       // сабмит редактирования юзер-пика
       popupContent.querySelector('.popup__button').addEventListener('click', (event) => {
-        event.preventDefault();             
-        userInfo.changeUserPic({avatar: popupContent.querySelector('.popup__input_type-additional').value});
+        event.preventDefault();
+        userInfo.changeUserPic({ avatar: popupContent.querySelector('.popup__input_type-additional').value });
         this.close();
       });
 
@@ -472,13 +531,13 @@ class Popup {
     document.body.classList.remove('body-fixed'); // но не смог
   }
   // валидация, надо переделать на основе validateInput
-  validate (event, element) {
+  validate(event, element) {
     const somePopupButton = document.querySelector('.popup__button');
     const someError = document.querySelector(`.error__${event.target.name}`);
     const otherPopupInputValid = element.validity.valid;
     let thisPopupInputValid = event.target.validity.valid;
-    
-    if (thisPopupInputValid && otherPopupInputValid) {      
+
+    if (thisPopupInputValid && otherPopupInputValid) {
       someError.classList.add('error_hidden');
       someError.textContent = 'no errors';
       somePopupButton.removeAttribute('disabled');
@@ -496,12 +555,12 @@ class Popup {
     }
   }
   // валидирует инпут
-  validateInput (event) {
-    
+  validateInput(event) {
+
     const somePopupButton = document.querySelector('.popup__button');
-    const someError = document.querySelector(`.error__${event.target.name}`);    
-    
-    if (event.target.validity.valid) {      
+    const someError = document.querySelector(`.error__${event.target.name}`);
+
+    if (event.target.validity.valid) {
       someError.classList.add('error_hidden');
       someError.textContent = 'no errors';
       somePopupButton.removeAttribute('disabled');
@@ -521,12 +580,12 @@ class Popup {
 }
 
 
-const options = {url: 'http://95.216.175.5/cohort4', token: '01ae8842-bd3d-421f-aca3-5f8ed5caf81a'}
+const options = { url: 'http://95.216.175.5/cohort4', token: '01ae8842-bd3d-421f-aca3-5f8ed5caf81a' }
 
 const api = new Api(options);
 const userInfo = new UserInfo(api);
 const placesList = new CardList(document.querySelector('.places-list'), api);
-const popupper = new Popup (document.querySelector('.popup'), api)
+const popupper = new Popup(document.querySelector('.popup'), api)
 
 const editProfileButton = document.querySelector('.user-info__edit-button');
 const addCardButton = document.querySelector('.user-info__add-button');
@@ -543,29 +602,29 @@ editProfileButton.addEventListener('click', (event => popupper.open(event)));
 addCardButton.addEventListener('click', (event => popupper.open(event)));
 userPhotoEdit.addEventListener('click', (event => popupper.open(event)));
 
-/** Привет. 
- * 
+/** Привет.
+ *
  * Хотел выполнить на 100%, но время вышло, поэтому сдаю без лайков, хотя апи готово.
- * 
+ *
  * Постановку и удаления лайков пробовал писать разными путями.
- * 
+ *
  * Столкнулся с проблемой - не смог удалить с элемента EventLisener.
- * 
+ *
  * Подскажите как реализовать 7 пункт из проэктной работы N9
- * 
+ *
  * Спасибо.   */
 
 /**
- * Работа принимается. 
- * 
- * В класс АPI надо бы добавить catch для отслеживания ошибок сети или сервера. 
- * 
+ * Работа принимается.
+ *
+ * В класс АPI надо бы добавить catch для отслеживания ошибок сети или сервера.
+ *
  * popupMarkup вынесите в метод отдельный, зачем дублируете код
- * 
- * Про лайки. Вы получаете список карточек. В ней есть объект likes в котором список лайкнувших. 
+ *
+ * Про лайки. Вы получаете список карточек. В ней есть объект likes в котором список лайкнувших.
  * Перебираете в отдельном методе этот объект и сравниваете с своим ID из про профиля. Если подошло, значит вы ставили лайк и так далее
- * 
+ *
  * Лайк ставите: отправляете запрос на лайк, приходит ответ что лайк принят, отмечаете в карточке.
- * 
- * 
+ *
+ *
  */
