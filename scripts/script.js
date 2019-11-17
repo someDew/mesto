@@ -1,4 +1,4 @@
-/* Sprint11_ver1.1 --- after review 1 --- Bubnov Andrew - 23.10.2019 --- Have a nice day! :) */
+/* Sprint11_ver1.2 --- Bubnov Andrew - 17.11.2019 --- Have a nice day! :) */
 
 /**
  * Токен: 01ae8842-bd3d-421f-aca3-5f8ed5caf81a
@@ -129,9 +129,9 @@ class Api {
         console.log(err);
       });
   }
-  putLike(cardId) {
+  like(cardId, method) {
     return fetch(`${this.url}/cards/like/${cardId}`, {
-      method: 'PUT',
+      method: method,
       headers: {
         authorization: this.token,
         'Content-Type': 'application/json'
@@ -226,55 +226,68 @@ class CardList {
     });
   }
   // 
-  postLike (event) {
+  pushLike (event) {
     event.stopPropagation();
-    const cardId = event.target.closest('.place-card').dataset.cardid;
-    this.api.putLike(cardId).then((resCardData) => { // здесь я хотел 
-      const likeCount = event.target.closest('.place-card__like-container').querySelector('.place-card__like-count');
+    let cardLike = event.target.closest('.place-card').dataset.liked;
+    const cardId = event.target.closest('.place-card').dataset.cardId;
+    let method = 'string'
+    if (cardLike) {
+      method = 'DELETE'
+    } else {
+      method = 'PUT'
+    }
+    this.api.like(cardId, method).then((resCardData) => { // здесь я хотел 
+      const cardElement = event.target.closest('.place-card');      
+      const likeCount = cardElement.querySelector('.place-card__like-count');
+      const likeIcon = cardElement.querySelector('.place-card__like-icon');
       console.log(resCardData);
-      const resMeta = this.isLiked(resCardData);
-      if (resMeta.stat) {
-        this.cardsData[resMeta.iter] = resCardData;        
-        if (resCardData.likes.length > 99) {
-          likeCount.textContent = '99+' ;
-        } else {
-          likeCount.textContent = resCardData.likes.length;
-        }
+      const isLiked = this.isLiked(resCardData);
+      cardLike = isLiked.status;
+      if (isLiked.status) {
+        this.cardsData[isLiked.number] = resCardData;
+        likeIcon.classList.add('place-card__like-icon_liked');        
       } else {
-
+        likeIcon.classList.remove('place-card__like-icon_liked');
       }
 
-      
-
-      
-      
+      if (resCardData.likes.length > 99) {
+        likeCount.textContent = '99+' ;
+      } else {
+        likeCount.textContent = resCardData.likes.length;
+      }     
     });
   }
+
+  renderLike(cardElement, object) {
+
+  }
+
   // штука проверяющая полайкана ли карточка
-  isLiked(resCardData) {
+  isLiked(cardData) {
     let count = 0;
     for (let i = 0; i <= (this.cardsData.length - 1); i++) {
-      if (this.cardsData[i]._id === resCardData._id) {
-        for (let j = 0; j <= (resCardData.likes.length - 1); j++) {
-          count = i;
-          if (resCardData.likes[j]._id === this.api.userId) {            
-            return {stat: true, iter: count}
+      if (this.cardsData[i]._id === cardData._id) {
+        count = i;
+        for (let j = (this.cardsData[i].likes.length - 1); j >= 0; j--) {
+          if (cardData.likes[j]._id === this.api.userId) {            
+            return {status: true, number: count}
           }
         }
       }
+      return {status: false, number: count}
     }
-    return {stat: false, iter: count}
+    console.log('Error. This cardId is missing... Please, refresh.')
   }
-  getCardFromCardList (cardId) {}
 }
+  
+
 
 // создавальщик карточек
 class Card {
   constructor (data, api) {
     this.api = api;
     this.data = data;
-    this.cardElement = this.create(this.data);    
-    this.liked = false;
+    this.cardElement = this.create(this.data);
   }
 
   create (data) {
@@ -291,16 +304,21 @@ class Card {
       </div>`;
     const cardContainer = document.createElement('div');    
     cardContainer.classList.add('place-card');
-    cardContainer.setAttribute('data-cardId', `${data._id}`);
+    cardContainer.setAttribute('data-card-id', `${data._id}`);
     cardContainer.innerHTML = cardTemplate;
     const likeCount = cardContainer.querySelector('.place-card__like-count');
-    cardContainer.querySelector('.place-card__like-icon').addEventListener('click', (event => placesList.postLike(event)));
+    cardContainer.querySelector('.place-card__like-icon').addEventListener('click', (event => placesList.pushLike(event)));
     cardContainer.querySelector('.place-card__delete-icon').addEventListener('click', (event => placesList.removeCard(event)));
     cardContainer.querySelector('.place-card__image').addEventListener('click', (event => popupper.open(event)));
 
     // рисую лайк, если каунт больше полкано этим юзером
-    if (placesList.isLiked(data).stat) {
-      cardContainer.querySelector('.place-card__like-icon').classList.add('place-card__like-icon_liked')
+    const isLiked = placesList.isLiked(data);
+    if (isLiked.status) {
+      cardContainer.querySelector('.place-card__like-icon').classList.add('place-card__like-icon_liked');
+      cardContainer.setAttribute('data-liked', true);
+    } else {
+      cardContainer.querySelector('.place-card__like-icon').classList.remove('place-card__like-icon_liked');
+      cardContainer.setAttribute('data-liked', false);
     }
     // меняю большие цифры на красивые
     if (data.likes.length > 99) {
@@ -312,22 +330,6 @@ class Card {
     }
     
     return cardContainer;
-  }
-
-  like (event) { // не используется, кажется, может пригодиться
-    this.liked = !this.liked;
-    event.stopPropagation();    
-    if (this.liked) {
-      event.target.classList.add('place-card__like-icon_liked');
-    }
-    else {
-      event.target.classList.remove('place-card__like-icon_liked')
-    }
-  }
-
-  remove (event) {
-    event.stopPropagation();
-    event.target.closest('.place-card').remove();
   }
 }
 

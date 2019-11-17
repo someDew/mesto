@@ -1,5 +1,5 @@
 # Mesto
-## v0.1.1
+## v0.1.2
 ---
   
 ### About:
@@ -11,6 +11,11 @@ Hi! And wellcome.
 'Mesto' is a _study project_. Its simple web application for publishing images with short text.
 
 Today users may add images, post likes, change user about and user pic.
+
+### Whats new:
+
+- Like count and icon now visible and correct
+- Anyway like/unlike function stil work incorrect
 
 ### Issues:
 
