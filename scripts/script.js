@@ -231,7 +231,7 @@ class CardList {
     let cardLike = event.target.closest('.place-card').dataset.liked;
     const cardId = event.target.closest('.place-card').dataset.cardId;
     let method = 'string'
-    if (cardLike) {
+    if (cardLike === 'true') {
       method = 'DELETE'
     } else {
       method = 'PUT'
@@ -243,9 +243,12 @@ class CardList {
       console.log(resCardData);
       const isLiked = this.isLiked(resCardData);
       cardLike = isLiked.status;
+      
+      cardElement.dataset.liked = isLiked.status;
       if (isLiked.status) {
         this.cardsData[isLiked.number] = resCardData;
-        likeIcon.classList.add('place-card__like-icon_liked');        
+        likeIcon.classList.add('place-card__like-icon_liked');
+               
       } else {
         likeIcon.classList.remove('place-card__like-icon_liked');
       }
@@ -256,13 +259,10 @@ class CardList {
         likeCount.textContent = resCardData.likes.length;
       }     
     });
-  }
+  }  
 
-  renderLike(cardElement, object) {
-
-  }
-
-  // штука проверяющая полайкана ли карточка
+  // штука проверяющая полайкана ли карточка.
+  // оказалось, это не работает думаю переписать на switch-case в следующей версии
   isLiked(cardData) {
     let count = 0;
     for (let i = 0; i <= (this.cardsData.length - 1); i++) {
@@ -274,8 +274,8 @@ class CardList {
           }
         }
       }
-      return {status: false, number: count}
     }
+    return {status: false, number: count} // <------------- эта строка срабатывает при любом исходе второго if
     console.log('Error. This cardId is missing... Please, refresh.')
   }
 }

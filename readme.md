@@ -14,12 +14,17 @@ Today users may add images, post likes, change user about and user pic.
 
 ### Whats new:
 
-- Like count and icon now visible and correct
+- Fixed api method pushLike();
+- Fixed save isLiked.status into DOM object;
+- Deleted some garbage from class CardList
+
+- Like count and icon now visible and correct after page load
+- Unlike functionality now so near to be done
 - Anyway like/unlike function stil work incorrect
 
 ### Issues:
 
-- Like/Unlike bug
+- Like/Unlike bugs
 
 -----
 > Feel free to ask your questions **@dewandrew**
