@@ -345,7 +345,6 @@ class Card {
     cardContainer.querySelector('.place-card__like-icon').addEventListener('click', (event => placesList.pushLike(event)));
     cardContainer.querySelector('.place-card__delete-icon').addEventListener('click', (event => placesList.removeCard(event)));
     cardContainer.querySelector('.place-card__image').addEventListener('click', (event => popupper.open(event)));
-    cardContainer.querySelector('.place-card__like-icon').addEventListener('click', (event => placesList.toggleLike(event)));
 
     // рисую лайк, если каунт больше полкано этим юзером
     const isLiked = placesList.isLiked(data);
