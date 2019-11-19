@@ -140,6 +140,44 @@ class Api {
         console.log(err);
       });
   }
+
+  delLike(cardId) {
+    return fetch(`${this.url}/cards/like/${cardId}`, {
+      method: 'DELETE',
+      headers: {
+        authorization: this.token,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(cardData => {
+        if (cardData.ok) {
+          return cardData.json();
+        }
+        return Promise.reject(`Ошибка: ${cardData.status}`)
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  } 
+
+  fetchLike(cardId, method) {
+    return fetch(`${this.url}/cards/like/${cardId}`, {
+      method: method,
+      headers: {
+        authorization: this.token,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(cardData => {
+        if (cardData.ok) {
+          return cardData.json();
+        }
+        return Promise.reject(`Ошибка: ${cardData.status}`)
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
 }
 
 // сущность, которая творит всякое с датой профиля
@@ -187,6 +225,7 @@ class CardList {
   render() {
     this.api.getCardList().then((cardsList) => {
       // this.cardsData = cardsList; ----------------- тестово отключено
+      // debugger;
       for (let i = (cardsList.length - 1); 0 <= i; i--) {
         this.cardsData.unshift(cardsList[i]);
         const { cardElement } = new Card(cardsList[i], this.api);
@@ -206,6 +245,7 @@ class CardList {
       this.cardsData.unshift(cardData);
     })
   }
+  
   // дезинтегратор карточек
   removeCard(event) {
     event.stopPropagation();
@@ -288,13 +328,13 @@ class Card {
   create(data) {
 
     const cardTemplate = `
-      <div class="place-card__image" style="background-image: url(&quot;${data.link}&quot;);">
+      <div class="place-card__image" style="background-image: url('${data.link}');">
         <button class="place-card__delete-icon"></button>
         </div><div class="place-card__description">
         <h3 class="place-card__name">${data.name}</h3>
         <div class="place-card__like-container">
           <button class="place-card__like-icon"></button>
-          <p class="place-card__like-count">${data.likes.length}</p>
+          <p class="place-card__like-count"></p>
         </div>
       </div>`;
     const cardContainer = document.createElement('div');
@@ -305,6 +345,7 @@ class Card {
     cardContainer.querySelector('.place-card__like-icon').addEventListener('click', (event => placesList.pushLike(event)));
     cardContainer.querySelector('.place-card__delete-icon').addEventListener('click', (event => placesList.removeCard(event)));
     cardContainer.querySelector('.place-card__image').addEventListener('click', (event => popupper.open(event)));
+    cardContainer.querySelector('.place-card__like-icon').addEventListener('click', (event => placesList.toggleLike(event)));
 
     // рисую лайк, если каунт больше полкано этим юзером
     const isLiked = placesList.isLiked(data);
