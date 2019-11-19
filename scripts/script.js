@@ -1,13 +1,7 @@
-/* Sprint11_ver1.1 --- Bubnov Andrew - 16.11.2019 --- Have a nice day! */
-
-/**
- * Токен: 01ae8842-bd3d-421f-aca3-5f8ed5caf81a
- * Идентификатор группы: cohort4
- */
+/* Sprint11_v0.2.0 --- Bubnov Andrew - 19.11.2019 --- Have a nice day! :) */
 
 'use strict';
 
-// апи - делает магию
 class Api {
   constructor(options) {
     this.url = options.url;
@@ -18,7 +12,6 @@ class Api {
   getUserData() {
     return fetch(`${this.url}/users/me`, {
       headers: {
-        // authorization: '01ae8842-bd3d-421f-aca3-5f8ed5caf81b', // - error test
         authorization: this.token
       }
     })
@@ -129,13 +122,9 @@ class Api {
         console.log(err);
       });
   }
-
-
-  // пробую избежать повторения кода >>>>
-
-  /* putLike(cardId) {
+  like(cardId, method) {
     return fetch(`${this.url}/cards/like/${cardId}`, {
-      method: 'PUT',
+      method: method,
       headers: {
         authorization: this.token,
         'Content-Type': 'application/json'
@@ -169,7 +158,7 @@ class Api {
       .catch((err) => {
         console.log(err);
       });
-  } */
+  } 
 
   fetchLike(cardId, method) {
     return fetch(`${this.url}/cards/like/${cardId}`, {
@@ -239,9 +228,7 @@ class CardList {
       // debugger;
       for (let i = (cardsList.length - 1); 0 <= i; i--) {
         this.cardsData.unshift(cardsList[i]);
-        let n = (cardsList.length - 1) - i;
-        this.cardsData[n].userLiked = this.isLiked(cardsList[i]._id);
-        const { cardElement } = new Card(this.cardsData[n], this.api);
+        const { cardElement } = new Card(cardsList[i], this.api);
         this.container.appendChild(cardElement);
       }
     });
@@ -266,70 +253,68 @@ class CardList {
     console.log(cardId);
     this.api.deleteCard(cardId).then((cardsList) => {
       if (cardsList.message === 'Пост удалён') {
-        //  this.render() --- эта штука не заработала, хотел забирать новый список с серва
         event.target.closest('.place-card').remove(); // удаляю из дома сам
-      };
-    });
-  }
-  
-  // штука проверяющая полайкана ли карточка
-  isLiked(cardId) {
-    
-    for (let i = 0; i <= (this.cardsData.length - 1); i++) {
-      if (this.cardsData[i]._id === cardId) {
-        for (let j = 0; j <= (this.cardsData[i].likes.length - 1); j++) {
-          
-          if (this.cardsData[i].likes[j]._id === this.api.userId) {
-
-            // в iter пишу номер найденой карточки 
-            return { stat: true, oreder: i, likes: this.cardsData[i].likes.length }
+        this.cardsData = this.cardsData.filter(function (cardData) {
+          if (cardData._id !== cardId) {
+            return cardData;
           }
-        }
+        })
       }
-      return { stat: false, oreder: i, likes: this.cardsData[i].likes.length }
-    }
-    console.log('Ошибка, такого cardId не существует!')
-  }
-
-  toggleLike(event) {
-    event.stopPropagation();
-    let method = 'PUT';
-    let cardElement = event.target.closest('.place-card');
-    const cardId = cardElement.dataset.cardId;    
-    if (this.cardData[''].stat) {
-      method = 'DELETE'
-    };
-    this.api.fetchLike(cardId, method).then((resCardData) => {
-      console.log(resCardData);
-      this.cardsData[''] = resCardData;
-      cardElement = this.renderLike(cardElement);
     })
   }
 
-  renderLike(cardElement) {
-    debugger;
-    if (this.cardData[''].stat) {
-      cardElement.querySelector('.place-card__like-icon').classList.add('place-card__like-icon_liked')
-    } else {
-      cardElement.querySelector('.place-card__like-icon').classList.remove('place-card__like-icon_liked')
-    }
-    if (cardInfo.likes > 99) {
-      cardElement.querySelector('.place-card__like-count').textContent = '99+'
-    } else {
-      cardElement.querySelector('.place-card__like-count').textContent = cardInfo.likes
-    }
-    return cardElement
-  }
 
-  serchCardById(cardId) {
-    for (let i = 0; i <= (this.cardsData.length - 1); i++) {
-      if (this.cardsData[i]._id === cardId) {
-        return { data: this.cardsData[i], oder: i }
-      } else { 
-        console.log('Ошибка, такого cardId не существует!')
+// метод работающий с лайками 
+pushLike(event) {
+  event.stopPropagation();
+  let cardLike = event.target.closest('.place-card').dataset.liked;
+  const cardId = event.target.closest('.place-card').dataset.cardId;
+  let method = 'string'
+  if (cardLike === 'true') {
+    method = 'DELETE'
+  } else {
+    method = 'PUT'
+  }
+  this.api.like(cardId, method).then((resCardData) => {
+    const cardElement = event.target.closest('.place-card');
+    const likeCount = cardElement.querySelector('.place-card__like-count');
+    const likeIcon = cardElement.querySelector('.place-card__like-icon');
+    const isLiked = this.isLiked(resCardData);
+    cardLike = isLiked.status;
+
+    cardElement.dataset.liked = isLiked.status;
+    if (isLiked.status) {
+      this.cardsData[isLiked.number] = resCardData;
+      likeIcon.classList.add('place-card__like-icon_liked');
+
+    } else {
+      likeIcon.classList.remove('place-card__like-icon_liked');
+    }
+
+    if (resCardData.likes.length > 99) {
+      likeCount.textContent = '99+';
+    } else {
+      likeCount.textContent = resCardData.likes.length;
+    }
+  })
+}
+
+// штука проверяющая полайкана ли карточка
+isLiked(cardData) {
+  let count = 0;
+  for (let i = 0; i <= (this.cardsData.length - 1); i++) {
+    if (this.cardsData[i]._id === cardData._id) {
+      count = i;
+      for (let j = (cardData.likes.length - 1); j >= 0; j--) {
+        if (cardData.likes[j]._id === this.api.userId) {
+          return { status: true, number: count }
+        }
       }
+      break
     }
   }
+  return { status: false, number: count }
+}
 }
 
 // создавальщик карточек
@@ -352,42 +337,36 @@ class Card {
           <p class="place-card__like-count"></p>
         </div>
       </div>`;
-    let cardContainer = document.createElement('div');
+    const cardContainer = document.createElement('div');
     cardContainer.classList.add('place-card');
     cardContainer.setAttribute('data-card-id', `${data._id}`);
-    cardContainer.setAttribute('data-card-order', `${data._id}`);
     cardContainer.innerHTML = cardTemplate;
-
+    const likeCount = cardContainer.querySelector('.place-card__like-count');
+    cardContainer.querySelector('.place-card__like-icon').addEventListener('click', (event => placesList.pushLike(event)));
     cardContainer.querySelector('.place-card__delete-icon').addEventListener('click', (event => placesList.removeCard(event)));
     cardContainer.querySelector('.place-card__image').addEventListener('click', (event => popupper.open(event)));
     cardContainer.querySelector('.place-card__like-icon').addEventListener('click', (event => placesList.toggleLike(event)));
 
+    // рисую лайк, если каунт больше полкано этим юзером
+    const isLiked = placesList.isLiked(data);
+    if (isLiked.status) {
+      cardContainer.querySelector('.place-card__like-icon').classList.add('place-card__like-icon_liked');
+      cardContainer.setAttribute('data-liked', true);
+    } else {
+      cardContainer.querySelector('.place-card__like-icon').classList.remove('place-card__like-icon_liked');
+      cardContainer.setAttribute('data-liked', false);
+    }
+    // меняю большие цифры на красивые
+    if (data.likes.length > 99) {
+      likeCount.textContent = '99+';
+    }
     // удаляю delete button всех карточек с чужими ownerId
     if (data.owner._id !== this.api.userId) {
       cardContainer.querySelector('.place-card__image').removeChild(cardContainer.querySelector('.place-card__delete-icon'))
     }
 
-    // рисую лайк
-    cardContainer = placesList.renderLike(cardContainer);
-
     return cardContainer;
   }
-
-  /* like(event) { // не используется, кажется, может пригодиться
-    this.liked = !this.liked;
-    event.stopPropagation();
-    if (this.liked) {
-      event.target.classList.add('place-card__like-icon_liked');
-    }
-    else {
-      event.target.classList.remove('place-card__like-icon_liked')
-    }
-  } */
-
-  /* remove(event) {
-    event.stopPropagation();
-    event.target.closest('.place-card').remove();
-  } */
 }
 
 // генератор попапов
@@ -601,30 +580,3 @@ placesList.render();
 editProfileButton.addEventListener('click', (event => popupper.open(event)));
 addCardButton.addEventListener('click', (event => popupper.open(event)));
 userPhotoEdit.addEventListener('click', (event => popupper.open(event)));
-
-/** Привет.
- *
- * Хотел выполнить на 100%, но время вышло, поэтому сдаю без лайков, хотя апи готово.
- *
- * Постановку и удаления лайков пробовал писать разными путями.
- *
- * Столкнулся с проблемой - не смог удалить с элемента EventLisener.
- *
- * Подскажите как реализовать 7 пункт из проэктной работы N9
- *
- * Спасибо.   */
-
-/**
- * Работа принимается.
- *
- * В класс АPI надо бы добавить catch для отслеживания ошибок сети или сервера.
- *
- * popupMarkup вынесите в метод отдельный, зачем дублируете код
- *
- * Про лайки. Вы получаете список карточек. В ней есть объект likes в котором список лайкнувших.
- * Перебираете в отдельном методе этот объект и сравниваете с своим ID из про профиля. Если подошло, значит вы ставили лайк и так далее
- *
- * Лайк ставите: отправляете запрос на лайк, приходит ответ что лайк принят, отмечаете в карточке.
- *
- *
- */
