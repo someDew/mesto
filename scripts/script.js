@@ -359,7 +359,11 @@ class Card {
     // меняю большие цифры на красивые
     if (data.likes.length > 99) {
       likeCount.textContent = '99+';
+    } else {
+      likeCount.textContent = data.likes.length
     }
+    
+    
     // удаляю delete button всех карточек с чужими ownerId
     if (data.owner._id !== this.api.userId) {
       cardContainer.querySelector('.place-card__image').removeChild(cardContainer.querySelector('.place-card__delete-icon'))
