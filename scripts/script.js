@@ -1,24 +1,17 @@
-/* Sprint11_ver1.2 --- Bubnov Andrew - 17.11.2019 --- Have a nice day! :) */
-
-/**
- * Токен: 01ae8842-bd3d-421f-aca3-5f8ed5caf81a
- * Идентификатор группы: cohort4
- */
+/* Sprint11_v0.2.0 --- Bubnov Andrew - 19.11.2019 --- Have a nice day! :) */
 
 'use strict';
 
-// апи - делает магию
 class Api {
-  constructor (options) {
+  constructor(options) {
     this.url = options.url;
     this.token = options.token;
     this.userId = '';
   }
   // получить профиль
-  getUserData () {
+  getUserData() {
     return fetch(`${this.url}/users/me`, {
       headers: {
-        // authorization: '01ae8842-bd3d-421f-aca3-5f8ed5caf81b', // - error test
         authorization: this.token
       }
     })
@@ -151,8 +144,8 @@ class Api {
 
 // сущность, которая творит всякое с датой профиля
 class UserInfo {
-	constructor (api) {
-    this.api = api;    	
+  constructor(api) {
+    this.api = api;
   }
   // запрашивает данные юзера
   load() {
@@ -172,7 +165,7 @@ class UserInfo {
   render(userData) {
     document.querySelector('.user-info__name').textContent = userData.name;
     document.querySelector('.user-info__job').textContent = userData.about;
-    document.querySelector('.user-info__photo').style.backgroundImage =  `url(${userData.avatar})`;
+    document.querySelector('.user-info__photo').style.backgroundImage = `url(${userData.avatar})`;
   }
   // меняю юзер-пик
   changeUserPic(data) {
@@ -189,109 +182,113 @@ class CardList {
     this.api = api;
     this.container = container;
     this.cardsData = [];
-  }  
+  }
   // прошу карточки, читаю, рисую
-  render () {
+  render() {
     this.api.getCardList().then((cardsList) => {
       // this.cardsData = cardsList; ----------------- тестово отключено
       for (let i = (cardsList.length - 1); 0 <= i; i--) {
         this.cardsData.unshift(cardsList[i]);
-        const {cardElement} = new Card(cardsList[i], this.api);
+        const { cardElement } = new Card(cardsList[i], this.api);
         this.container.appendChild(cardElement);
       }
     });
   }
   // создаю карточку, рисую от новых к старым
-  addCard (data) {
+  addCard(data) {
     const cardData = {
       name: data.name,
       link: data.link
     };
     this.api.postNewCard(cardData).then((cardData) => {
-      const {cardElement} = new Card(cardData, this.api);
+      const { cardElement } = new Card(cardData, this.api);
       this.container.insertBefore(cardElement, this.container.firstChild);
       this.cardsData.unshift(cardData);
     })
   }
   // дезинтегратор карточек
-  removeCard (event) {
+  removeCard(event) {
     event.stopPropagation();
-    const cardId = event.target.closest('.place-card').dataset.cardid;
+    const cardId = event.target.closest('.place-card').dataset.cardId;
     console.log(cardId);
     this.api.deleteCard(cardId).then((cardsList) => {
       if (cardsList.message === 'Пост удалён') {
-        //  this.render() --- эта штука не заработала, хотел забирать новый список с серва
         event.target.closest('.place-card').remove(); // удаляю из дома сам
-      };      
-    });
-  }
-  // 
-  pushLike (event) {
-    event.stopPropagation();
-    let cardLike = event.target.closest('.place-card').dataset.liked;
-    const cardId = event.target.closest('.place-card').dataset.cardId;
-    let method = 'string'
-    if (cardLike === 'true') {
-      method = 'DELETE'
-    } else {
-      method = 'PUT'
-    }
-    this.api.like(cardId, method).then((resCardData) => { // здесь я хотел 
-      const cardElement = event.target.closest('.place-card');      
-      const likeCount = cardElement.querySelector('.place-card__like-count');
-      const likeIcon = cardElement.querySelector('.place-card__like-icon');
-      console.log(resCardData);
-      const isLiked = this.isLiked(resCardData);
-      cardLike = isLiked.status;
-      
-      cardElement.dataset.liked = isLiked.status;
-      if (isLiked.status) {
-        this.cardsData[isLiked.number] = resCardData;
-        likeIcon.classList.add('place-card__like-icon_liked');
-               
-      } else {
-        likeIcon.classList.remove('place-card__like-icon_liked');
-      }
-
-      if (resCardData.likes.length > 99) {
-        likeCount.textContent = '99+' ;
-      } else {
-        likeCount.textContent = resCardData.likes.length;
-      }     
-    });
-  }  
-
-  // штука проверяющая полайкана ли карточка.
-  // оказалось, это не работает думаю переписать на switch-case в следующей версии
-  isLiked(cardData) {
-    let count = 0;
-    for (let i = 0; i <= (this.cardsData.length - 1); i++) {
-      if (this.cardsData[i]._id === cardData._id) {
-        count = i;
-        for (let j = (this.cardsData[i].likes.length - 1); j >= 0; j--) {
-          if (cardData.likes[j]._id === this.api.userId) {            
-            return {status: true, number: count}
+        this.cardsData = this.cardsData.filter(function (cardData) {
+          if (cardData._id !== cardId) {
+            return cardData;
           }
+        })
+      }
+    })
+  }
+
+
+// 
+pushLike(event) {
+  event.stopPropagation();
+  let cardLike = event.target.closest('.place-card').dataset.liked;
+  const cardId = event.target.closest('.place-card').dataset.cardId;
+  let method = 'string'
+  if (cardLike === 'true') {
+    method = 'DELETE'
+  } else {
+    method = 'PUT'
+  }
+  this.api.like(cardId, method).then((resCardData) => { // здесь я хотел 
+    const cardElement = event.target.closest('.place-card');
+    const likeCount = cardElement.querySelector('.place-card__like-count');
+    const likeIcon = cardElement.querySelector('.place-card__like-icon');
+    console.log(resCardData);
+    const isLiked = this.isLiked(resCardData);
+    cardLike = isLiked.status;
+
+    cardElement.dataset.liked = isLiked.status;
+    if (isLiked.status) {
+      this.cardsData[isLiked.number] = resCardData;
+      likeIcon.classList.add('place-card__like-icon_liked');
+
+    } else {
+      likeIcon.classList.remove('place-card__like-icon_liked');
+    }
+
+    if (resCardData.likes.length > 99) {
+      likeCount.textContent = '99+';
+    } else {
+      likeCount.textContent = resCardData.likes.length;
+    }
+  })
+}
+
+// штука проверяющая полайкана ли карточка.
+// оказалось, это не работает думаю переписать на switch-case в следующей версии
+isLiked(cardData) {
+  let count = 0;
+  for (let i = 0; i <= (this.cardsData.length - 1); i++) {
+    if (this.cardsData[i]._id === cardData._id) {
+      count = i;
+      for (let j = (cardData.likes.length - 1); j >= 0; j--) {
+        if (cardData.likes[j]._id === this.api.userId) {
+          return { status: true, number: count }
         }
       }
+      break
     }
-    return {status: false, number: count} // <------------- эта строка срабатывает при любом исходе второго if
-    console.log('Error. This cardId is missing... Please, refresh.')
   }
+  return { status: false, number: count }
 }
-  
-
+}
 
 // создавальщик карточек
 class Card {
-  constructor (data, api) {
+  constructor(data, api) {
     this.api = api;
     this.data = data;
     this.cardElement = this.create(this.data);
   }
 
-  create (data) {
-    
+  create(data) {
+
     const cardTemplate = `
       <div class="place-card__image" style="background-image: url(&quot;${data.link}&quot;);">
         <button class="place-card__delete-icon"></button>
@@ -302,7 +299,7 @@ class Card {
           <p class="place-card__like-count">${data.likes.length}</p>
         </div>
       </div>`;
-    const cardContainer = document.createElement('div');    
+    const cardContainer = document.createElement('div');
     cardContainer.classList.add('place-card');
     cardContainer.setAttribute('data-card-id', `${data._id}`);
     cardContainer.innerHTML = cardTemplate;
@@ -322,29 +319,29 @@ class Card {
     }
     // меняю большие цифры на красивые
     if (data.likes.length > 99) {
-      likeCount.textContent = '99+' ;
+      likeCount.textContent = '99+';
     }
     // удаляю delete button всех карточек с чужими ownerId
-    if (data.owner._id !== 'fa549859955ed7d773a18e6d') { 
-      cardContainer.querySelector('.place-card__image').removeChild(cardContainer.querySelector('.place-card__delete-icon'))        
+    if (data.owner._id !== this.api.userId) {
+      cardContainer.querySelector('.place-card__image').removeChild(cardContainer.querySelector('.place-card__delete-icon'))
     }
-    
+
     return cardContainer;
   }
 }
 
 // генератор попапов
 class Popup {
-  constructor (popupContainer, api) {
+  constructor(popupContainer, api) {
     this.api = api;
-    this.popupContainer = popupContainer;    
+    this.popupContainer = popupContainer;
   }
   // меняю структуру попапа от event.target, 
   create(event) {
-    const popupContent = document.createElement('div');    
+    const popupContent = document.createElement('div');
     // попап фото
     if (event.target.classList.contains('place-card__image')) {
-      
+
       const popupMarkup = `
         <img class="popup__pic" src="${event.target.style.backgroundImage.slice(5, -2)}">
         <img class="popup__close" src="./images/close.svg">`;
@@ -357,7 +354,7 @@ class Popup {
     }
     // попап добавления карточки
     else if (event.target.classList.contains('user-info__add-button')) {
-      
+
       const popupMarkup = `
         <img class="popup__close" src="./images/close.svg">
         <h3 class="popup__title">Новое место</h3>
@@ -368,7 +365,7 @@ class Popup {
           <span class="error error_hidden error__additional">its no errors</span>
           <button class="button popup__button" disabled="yes" name="button" style="cursor: default;">+</button>
         </form>`;
-        
+
       popupContent.classList.add('popup__content');
       popupContent.innerHTML = popupMarkup;
 
@@ -388,7 +385,7 @@ class Popup {
           name: popupContent.querySelector('.popup__input_type-name').value,
           link: popupContent.querySelector('.popup__input_type-additional').value,
           count: 0
-        }        
+        }
         placesList.addCard(nawCardData);
         this.close();
       });
@@ -396,8 +393,8 @@ class Popup {
       return popupContent;
     }
     // попап редактирования name about
-    else if (event.target.classList.contains('user-info__edit-button')) {     
-      
+    else if (event.target.classList.contains('user-info__edit-button')) {
+
       const popupMarkup = `
         <img class="popup__close" src="./images/close.svg">
         <h3 class="popup__title">Редактировать профиль</h3>
@@ -425,13 +422,13 @@ class Popup {
       popupContent.querySelector('.popup__button').addEventListener('click', (event) => {
         event.preventDefault();
         this.close();
-        userInfo.changeNameAbout({name: popupContent.querySelector('.popup__input_type-name').value, about: popupContent.querySelector('.popup__input_type-additional').value});          
+        userInfo.changeNameAbout({ name: popupContent.querySelector('.popup__input_type-name').value, about: popupContent.querySelector('.popup__input_type-additional').value });
       });
       return popupContent;
     }
     // попап редактирования юзер-пика
     else if (event.target.classList.contains('user-info__photo')) {
-      
+
       const popupMarkup = `
         <img class="popup__close" src="./images/close.svg">
         <h3 class="popup__title">Обновить фотографию</h3>
@@ -440,22 +437,22 @@ class Popup {
           <span class="error error_hidden error__additional">its no errors</span>
           <button class="button popup__button" disabled="yes" name="button" style="cursor: default; font-size: 18px; font-weight: bold;">Сохранить</button>
         </form>`;
-        
+
       popupContent.classList.add('popup__content');
       popupContent.innerHTML = popupMarkup;
 
       popupContent.querySelector('.popup__close').addEventListener('click', () => {
         this.close();
       });
-      
+
       popupContent.querySelector('.popup__input_type-additional').addEventListener('input', (event) => {
         this.validateInput(event);
       });
 
       // сабмит редактирования юзер-пика
       popupContent.querySelector('.popup__button').addEventListener('click', (event) => {
-        event.preventDefault();             
-        userInfo.changeUserPic({avatar: popupContent.querySelector('.popup__input_type-additional').value});
+        event.preventDefault();
+        userInfo.changeUserPic({ avatar: popupContent.querySelector('.popup__input_type-additional').value });
         this.close();
       });
 
@@ -474,13 +471,13 @@ class Popup {
     document.body.classList.remove('body-fixed'); // но не смог
   }
   // валидация, надо переделать на основе validateInput
-  validate (event, element) {
+  validate(event, element) {
     const somePopupButton = document.querySelector('.popup__button');
     const someError = document.querySelector(`.error__${event.target.name}`);
     const otherPopupInputValid = element.validity.valid;
     let thisPopupInputValid = event.target.validity.valid;
-    
-    if (thisPopupInputValid && otherPopupInputValid) {      
+
+    if (thisPopupInputValid && otherPopupInputValid) {
       someError.classList.add('error_hidden');
       someError.textContent = 'no errors';
       somePopupButton.removeAttribute('disabled');
@@ -498,12 +495,12 @@ class Popup {
     }
   }
   // валидирует инпут
-  validateInput (event) {
-    
+  validateInput(event) {
+
     const somePopupButton = document.querySelector('.popup__button');
-    const someError = document.querySelector(`.error__${event.target.name}`);    
-    
-    if (event.target.validity.valid) {      
+    const someError = document.querySelector(`.error__${event.target.name}`);
+
+    if (event.target.validity.valid) {
       someError.classList.add('error_hidden');
       someError.textContent = 'no errors';
       somePopupButton.removeAttribute('disabled');
@@ -523,12 +520,12 @@ class Popup {
 }
 
 
-const options = {url: 'http://95.216.175.5/cohort4', token: '01ae8842-bd3d-421f-aca3-5f8ed5caf81a'}
+const options = { url: 'http://95.216.175.5/cohort4', token: '01ae8842-bd3d-421f-aca3-5f8ed5caf81a' }
 
 const api = new Api(options);
 const userInfo = new UserInfo(api);
 const placesList = new CardList(document.querySelector('.places-list'), api);
-const popupper = new Popup (document.querySelector('.popup'), api)
+const popupper = new Popup(document.querySelector('.popup'), api)
 
 const editProfileButton = document.querySelector('.user-info__edit-button');
 const addCardButton = document.querySelector('.user-info__add-button');
@@ -544,30 +541,3 @@ placesList.render();
 editProfileButton.addEventListener('click', (event => popupper.open(event)));
 addCardButton.addEventListener('click', (event => popupper.open(event)));
 userPhotoEdit.addEventListener('click', (event => popupper.open(event)));
-
-/** Привет. 
- * 
- * Хотел выполнить на 100%, но время вышло, поэтому сдаю без лайков, хотя апи готово.
- * 
- * Постановку и удаления лайков пробовал писать разными путями.
- * 
- * Столкнулся с проблемой - не смог удалить с элемента EventLisener.
- * 
- * Подскажите как реализовать 7 пункт из проэктной работы N9
- * 
- * Спасибо.   */
-
-/**
- * Работа принимается. 
- * 
- * В класс АPI надо бы добавить catch для отслеживания ошибок сети или сервера. 
- * 
- * popupMarkup вынесите в метод отдельный, зачем дублируете код
- * 
- * Про лайки. Вы получаете список карточек. В ней есть объект likes в котором список лайкнувших. 
- * Перебираете в отдельном методе этот объект и сравниваете с своим ID из про профиля. Если подошло, значит вы ставили лайк и так далее
- * 
- * Лайк ставите: отправляете запрос на лайк, приходит ответ что лайк принят, отмечаете в карточке.
- * 
- * 
- */
