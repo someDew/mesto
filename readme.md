@@ -1,5 +1,5 @@
 # Mesto
-## v0.2.0
+## v0.2.2
 ---
   
 ### About:
@@ -21,11 +21,11 @@ Today users may add images, post likes, change user about and user pic.
 
 ### Whats new:
 
-- Its a first fully work release.
+- First added modules to project
 
 ### Issues:
 
-- let me now
+- need for webpack
 
 -----
 > Feel free to ask your questions **@dewandrew**
