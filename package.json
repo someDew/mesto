@@ -1,0 +1,22 @@
+{
+  "name": "mesto",
+  "version": "0.2.2",
+  "description": "---",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/someDew/mesto.git"
+  },
+  "author": "@dewandrew",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/someDew/mesto/issues"
+  },
+  "homepage": "https://github.com/someDew/mesto#readme",
+  "devDependencies": {
+    "webpack": "^4.41.2"
+  }
+}
