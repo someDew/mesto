@@ -386,8 +386,8 @@ class Popup {
   }
 }
 
-
-const options = { url: 'http://95.216.175.5/cohort4', token: '01ae8842-bd3d-421f-aca3-5f8ed5caf81a' }
+const serverUrl = NODE_ENV === 'development' ? 'http://praktikum.tk/cohort4' : 'https://praktikum.tk/cohort4'
+const options = { url: serverUrl, token: '01ae8842-bd3d-421f-aca3-5f8ed5caf81a' }
 
 const api = new Api(options);
 const userInfo = new UserInfo(api);

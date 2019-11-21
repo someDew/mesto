@@ -24,13 +24,18 @@ module.exports = {
             ]
         },
         plugins: [ 
-            new MiniCssExtractPlugin({filename: 'style.[contenthash].css'}),
+            new MiniCssExtractPlugin({
+                filename: 'style.[contenthash].css'
+            }),
             new HtmlWebpackPlugin({
                 inject: false, // стили НЕ нужно прописывать внутри тегов
                 // hash: true, // для страницы нужно считать хеш
                 template: './src/index.html', // откуда брать образец для сравнения с текущим видом проекта
                 filename: 'index.html' // имя выходного файла, то есть того, что окажется в папке dist после сборки
             }),
-            new WebpackMd5Hash()
+            new WebpackMd5Hash(),
+            new webpack.DefinePlugin({
+                'NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+               })
             ]
 }
