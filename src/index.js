@@ -2,6 +2,7 @@
 
 'use strict';
 
+import "./style.css";
 import {Api} from '../scripts/api.js';
 
 // работает с датой профиля
