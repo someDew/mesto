@@ -1,7 +1,7 @@
 /* Sprint11_v0.2.2 --- Bubnov Andrew - 21.11.2019 --- Have a nice day! :) */
 
 // импорт модулей
-import {Api} from '../scripts/api.js';
+import {Api} from './scripts/api.js';
 
 // импорт стилей
 import "./pages/index.css";
