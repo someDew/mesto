@@ -24,27 +24,18 @@ module.exports = {
                 use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader'] // к этим файлам нужно применить пакеты, которые мы уже установили
             },
             {
-                test: /\.(woff2)$/i,
-                loader: 'file-loader',
-                options: {
-                    name(file) {
-                        if (process.env.NODE_ENV === 'development') {
-                            return '[path][name].[ext]';
-                        }
-                        return '[contenthash].[ext]';
-                    },
-                    outputPath: 'images'
-                }
+                test: /\.(eot|ttf|woff|woff2)$/,
+                loader: 'file-loader?name=./vendor/[name].[ext]'
             },
             {
                 test: /\.(png|jpg|gif|ico|svg)$/,
                 use: [
-                    'file-loader?name=../images/[name].[ext]', // указали папку, куда складывать изображения
-                    {
-                        loader: 'image-webpack-loader',
-                        options: { disable: true }
-                    },
-                ],
+                     'file-loader?name=../images/[name].[ext]', // указали папку, куда складывать изображения
+                     {
+                         loader: 'image-webpack-loader',
+                         options: { ...args }
+                     }
+                ]
             },
             {
                 test: /\.css$/i,
