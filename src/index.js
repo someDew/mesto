@@ -212,7 +212,7 @@ class Popup {
 
       const popupMarkup = `
         <img class="popup__pic" src="${event.target.style.backgroundImage.slice(5, -2)}">
-        <img class="popup__close" src="<%=require('./images/close.svg')%>">`;
+        <img class="popup__close" src="./images/close.svg">`;
       popupContent.classList.add('popup__photo-content');
       popupContent.innerHTML = popupMarkup;
       popupContent.querySelector('.popup__close').addEventListener('click', () => {
@@ -224,7 +224,7 @@ class Popup {
     else if (event.target.classList.contains('user-info__add-button')) {
 
       const popupMarkup = `
-        <img class="popup__close" src="<%=require('./images/close.svg')%>">
+        <img class="popup__close" src="./images/close.svg">
         <h3 class="popup__title">Новое место</h3>
         <form class="popup__form form">
           <input class="popup__input popup__input_type-name" type="text" name="name" minlength="2" maxlength="30" required="yes" placeholder="Название">
@@ -264,7 +264,7 @@ class Popup {
     else if (event.target.classList.contains('user-info__edit-button')) {
 
       const popupMarkup = `
-        <img class="popup__close" src="<%=require('./images/close.svg')%>">
+        <img class="popup__close" src="./images/close.svg">
         <h3 class="popup__title">Редактировать профиль</h3>
         <form class="popup__form form">
           <input class="popup__input popup__input_type-name" type="text" name="name" minlength="2" maxlength="30" required="yes" placeholder="Имя" value="${document.querySelector('.user-info__name').innerText}">
@@ -298,7 +298,7 @@ class Popup {
     else if (event.target.classList.contains('user-info__photo')) {
 
       const popupMarkup = `
-        <img class="popup__close" src="<%=require('./images/close.svg')%>">
+        <img class="popup__close" src="./images/close.svg">
         <h3 class="popup__title">Обновить фотографию</h3>
         <form class="popup__form form">
           <input class="popup__input popup__input_type-additional" type="url" name="additional" required="yes" placeholder="Ссылка на фотографию">
