@@ -30,11 +30,11 @@ module.exports = {
             {
                 test: /\.(png|jpg|gif|ico|svg)$/,
                 use: [
-                     'file-loader?name=../images/[name].[ext]', // указали папку, куда складывать изображения
-                     {
-                         loader: 'image-webpack-loader',
-                         options: { ...args }
-                     }
+                    'file-loader?name=../images/[name].[ext]', // указали папку, куда складывать изображения
+                    {
+                        loader: 'image-webpack-loader',
+                        options: { disable: true }
+                    }
                 ]
             },
             {
@@ -65,9 +65,9 @@ module.exports = {
             assetNameRegExp: /\.css$/g,
             cssProcessor: require('cssnano'),
             cssProcessorPluginOptions: {
-                    preset: ['default'],
+                preset: ['default'],
             },
             canPrint: true
-       })
+        })
     ]
 }
