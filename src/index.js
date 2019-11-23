@@ -1,5 +1,3 @@
-/* Sprint11_v0.2.2 --- Bubnov Andrew - 21.11.2019 --- Have a nice day! :) */
-
 // импорт модулей
 import {Api} from './scripts/api.js';
 
@@ -125,13 +123,13 @@ pushLike(event) {
   })
 }
 
-// штука проверяющая полайкана ли карточка
+// штука проверяющая полайкана ли карточка этим юзером
 isLiked(cardData) {
   let count = 0;
-  for (let i = 0; i <= (this.cardsData.length - 1); i++) {
+  for (let i = 0; i <= (this.cardsData.length - 1); i++) { // здесь пропадают скобки после сборки 
     if (this.cardsData[i]._id === cardData._id) {
       count = i;
-      for (let j = (cardData.likes.length - 1); j >= 0; j--) {
+      for (let j = (cardData.likes.length - 1); j >= 0; j--) { // и тут
         if (cardData.likes[j]._id === this.api.userId) {
           return { status: true, number: count }
         }
