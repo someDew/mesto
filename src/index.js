@@ -48,11 +48,9 @@ class CardList {
   // прошу карточки, читаю, рисую
   render() {
     this.api.getCardList().then((cardsList) => {
-      // this.cardsData = cardsList; ----------------- тестово отключено
-      // debugger;
-      for (let i = (cardsList.length - 1); 0 <= i; i--) {
-        this.cardsData.unshift(cardsList[i]);
-        const { cardElement } = new Card(cardsList[i], this.api);
+      for (let cardData of cardsList.reverse()) {
+        this.cardsData.push(cardData);
+        const { cardElement } = new Card(cardData, this.api);
         this.container.appendChild(cardElement);
       }
     });
@@ -150,7 +148,6 @@ class Card {
   }
 
   create(data) {
-
     const cardTemplate = `
       <div class="place-card__image" style="background-image: url('${data.link}');">
         <button class="place-card__delete-icon"></button>
