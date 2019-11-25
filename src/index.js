@@ -1,148 +1,10 @@
-/* Sprint11_v0.2.0 --- Bubnov Andrew - 19.11.2019 --- Have a nice day! :) */
+// импорт модулей
+import {Api} from './scripts/api.js';
 
-'use strict';
+// импорт стилей
+import "./pages/index.css";
 
-class Api {
-  constructor(options) {
-    this.url = options.url;
-    this.token = options.token;
-    this.userId = '';
-  }
-  // получить профиль
-  getUserData() {
-    return fetch(`${this.url}/users/me`, {
-      headers: {
-        authorization: this.token
-      }
-    })
-      .then(res => {
-        if (res.ok) {
-          return res.json();
-        }
-        return Promise.reject(`Ошибка: ${res.status}`)
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }
-  // изменить профиль name about
-  patchUserData(data) {
-    return fetch(`${this.url}/users/me`, {
-      method: 'PATCH',
-      headers: {
-        // authorization: '01ae8842-bd3d-421f-aca3-5f8ed5caf81b', // - error test
-        authorization: this.token,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    })
-      .then(resUserData => {
-        if (resUserData.ok) {
-          return resUserData.json();
-        }
-        return Promise.reject(`Ошибка: ${resUserData.status}`)
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }
-  // изменить профиль pic
-  patchUserPic(data) {
-    return fetch(`${this.url}/users/me/avatar`, {
-      method: 'PATCH',
-      headers: {
-        authorization: this.token,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    })
-      .then(resUserData => {
-        if (resUserData.ok) {
-          return resUserData.json();
-        }
-        return Promise.reject(`Ошибка: ${resUserData.status}`)
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }
-  // получить карточки
-  getCardList() {
-    return fetch(`${this.url}/cards`, {
-      headers: {
-        authorization: this.token
-      }
-    })
-      .then(resCardList => {
-        if (resCardList.ok) {
-          return resCardList.json();
-        }
-        return Promise.reject(`Ошибка: ${resCardList.status}`)
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }
-  // добавляем новую карточку на серв
-  postNewCard(data) {
-    return fetch(`${this.url}/cards`, {
-      method: 'POST',
-      headers: {
-        authorization: this.token,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    })
-      .then(resCardData => {
-        if (resCardData.ok) {
-          return resCardData.json();
-        }
-        return Promise.reject(`Ошибка: ${resCardData.status}`)
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }
-  // вернет карточки без удаленной id
-  deleteCard(cardId) {
-    return fetch(`${this.url}/cards/${cardId}`, {
-      method: 'DELETE',
-      headers: {
-        authorization: this.token,
-        'Content-Type': 'application/json'
-      }
-    })
-      .then(deletStatus => {
-        if (deletStatus.ok) {
-          return deletStatus.json();
-        }
-        return Promise.reject(`Ошибка: ${deletStatus.status}`)
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }
-  like(cardId, method) {
-    return fetch(`${this.url}/cards/like/${cardId}`, {
-      method: method,
-      headers: {
-        authorization: this.token,
-        'Content-Type': 'application/json'
-      }
-    })
-      .then(cardData => {
-        if (cardData.ok) {
-          return cardData.json();
-        }
-        return Promise.reject(`Ошибка: ${cardData.status}`)
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }
-}
-
-// сущность, которая творит всякое с датой профиля
+// работает с датой профиля
 class UserInfo {
   constructor(api) {
     this.api = api;
@@ -176,7 +38,7 @@ class UserInfo {
   }
 }
 
-// штука, работающая со списком карточек
+// работающая со списком карточек
 class CardList {
   constructor(container, api) {
     this.api = api;
@@ -186,10 +48,9 @@ class CardList {
   // прошу карточки, читаю, рисую
   render() {
     this.api.getCardList().then((cardsList) => {
-      // this.cardsData = cardsList; ----------------- тестово отключено
-      for (let i = (cardsList.length - 1); 0 <= i; i--) {
-        this.cardsData.unshift(cardsList[i]);
-        const { cardElement } = new Card(cardsList[i], this.api);
+      for (let cardData of cardsList.reverse()) {
+        this.cardsData.push(cardData);
+        const { cardElement } = new Card(cardData, this.api);
         this.container.appendChild(cardElement);
       }
     });
@@ -206,6 +67,7 @@ class CardList {
       this.cardsData.unshift(cardData);
     })
   }
+  
   // дезинтегратор карточек
   removeCard(event) {
     event.stopPropagation();
@@ -259,13 +121,13 @@ pushLike(event) {
   })
 }
 
-// штука проверяющая полайкана ли карточка
+// штука проверяющая полайкана ли карточка этим юзером
 isLiked(cardData) {
   let count = 0;
-  for (let i = 0; i <= (this.cardsData.length - 1); i++) {
+  for (let i = 0; i <= (this.cardsData.length - 1); i++) { // здесь пропадают скобки после сборки 
     if (this.cardsData[i]._id === cardData._id) {
       count = i;
-      for (let j = (cardData.likes.length - 1); j >= 0; j--) {
+      for (let j = (cardData.likes.length - 1); j >= 0; j--) { // и тут
         if (cardData.likes[j]._id === this.api.userId) {
           return { status: true, number: count }
         }
@@ -286,15 +148,14 @@ class Card {
   }
 
   create(data) {
-
     const cardTemplate = `
-      <div class="place-card__image" style="background-image: url(&quot;${data.link}&quot;);">
+      <div class="place-card__image" style="background-image: url('${data.link}');">
         <button class="place-card__delete-icon"></button>
         </div><div class="place-card__description">
         <h3 class="place-card__name">${data.name}</h3>
         <div class="place-card__like-container">
           <button class="place-card__like-icon"></button>
-          <p class="place-card__like-count">${data.likes.length}</p>
+          <p class="place-card__like-count"></p>
         </div>
       </div>`;
     const cardContainer = document.createElement('div');
@@ -308,17 +169,21 @@ class Card {
 
     // рисую лайк, если каунт больше полкано этим юзером
     const isLiked = placesList.isLiked(data);
+    cardContainer.setAttribute('data-liked', isLiked.status);
     if (isLiked.status) {
-      cardContainer.querySelector('.place-card__like-icon').classList.add('place-card__like-icon_liked');
-      cardContainer.setAttribute('data-liked', true);
+      cardContainer.querySelector('.place-card__like-icon').classList.add('place-card__like-icon_liked');      
     } else {
       cardContainer.querySelector('.place-card__like-icon').classList.remove('place-card__like-icon_liked');
-      cardContainer.setAttribute('data-liked', false);
     }
+    
     // меняю большие цифры на красивые
     if (data.likes.length > 99) {
       likeCount.textContent = '99+';
+    } else {
+      likeCount.textContent = data.likes.length
     }
+    
+    
     // удаляю delete button всех карточек с чужими ownerId
     if (data.owner._id !== this.api.userId) {
       cardContainer.querySelector('.place-card__image').removeChild(cardContainer.querySelector('.place-card__delete-icon'))
@@ -517,17 +382,13 @@ class Popup {
   }
 }
 
-
-const options = { url: 'http://95.216.175.5/cohort4', token: '01ae8842-bd3d-421f-aca3-5f8ed5caf81a' }
+const serverUrl = NODE_ENV === 'development' ? 'http://praktikum.tk/cohort4' : 'https://praktikum.tk/cohort4'
+const options = { url: serverUrl, token: '01ae8842-bd3d-421f-aca3-5f8ed5caf81a' }
 
 const api = new Api(options);
 const userInfo = new UserInfo(api);
 const placesList = new CardList(document.querySelector('.places-list'), api);
 const popupper = new Popup(document.querySelector('.popup'), api)
-
-const editProfileButton = document.querySelector('.user-info__edit-button');
-const addCardButton = document.querySelector('.user-info__add-button');
-const userPhotoEdit = document.querySelector('.user-info__photo');
 
 // рисую юзера на старте
 userInfo.load();
@@ -536,6 +397,6 @@ userInfo.load();
 placesList.render();
 
 // развешиваю попапы
-editProfileButton.addEventListener('click', (event => popupper.open(event)));
-addCardButton.addEventListener('click', (event => popupper.open(event)));
-userPhotoEdit.addEventListener('click', (event => popupper.open(event)));
+document.querySelector('.user-info__edit-button').addEventListener('click', (event => popupper.open(event)));
+document.querySelector('.user-info__add-button').addEventListener('click', (event => popupper.open(event)));
+document.querySelector('.user-info__photo').addEventListener('click', (event => popupper.open(event)));
